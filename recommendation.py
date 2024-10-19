@@ -4,7 +4,7 @@
 # ### Import Libraries
 # 
 
-# In[1]:
+# In[52]:
 
 
 import warnings
@@ -23,49 +23,49 @@ from sklearn.metrics import mean_squared_error
 # ### Import Dataset
 # 
 
-# In[2]:
+# In[53]:
 
 
 df=pd.read_csv('dataset.csv',header=None)
 
 
-# In[3]:
+# In[54]:
 
 
 df.head(2)
 
 
-# In[4]:
+# In[55]:
 
 
 df.columns=['user_id','prod_id','rating','timestamp']
 
 
-# In[5]:
+# In[56]:
 
 
 df.head(2)
 
 
-# In[6]:
+# In[57]:
 
 
 df=df.drop('timestamp',axis=1)
 
 
-# In[7]:
+# In[58]:
 
 
 df.head(2)
 
 
-# In[8]:
+# In[59]:
 
 
 database=df.copy(deep=True)
 
 
-# In[9]:
+# In[60]:
 
 
 database.head(2)
@@ -74,7 +74,7 @@ database.head(2)
 # ### Exploratory Data Aanlysis
 # 
 
-# In[10]:
+# In[61]:
 
 
 rows,coloumns=database.shape
@@ -82,25 +82,25 @@ print(f"Number of rows: {rows}")
 print(f"Number of columns: {coloumns}")
 
 
-# In[11]:
+# In[62]:
 
 
 database.info()
 
 
-# In[12]:
+# In[63]:
 
 
 database.isna().sum()
 
 
-# In[13]:
+# In[64]:
 
 
 database['rating'].describe()
 
 
-# In[14]:
+# In[65]:
 
 
 plt.figure(figsize=(12,6))
@@ -108,7 +108,7 @@ database['rating'].value_counts(1).plot(kind='bar')
 plt.show()
 
 
-# In[15]:
+# In[66]:
 
 
 num_users=database['user_id'].nunique()
@@ -119,18 +119,24 @@ print(f"Number of unique users: {num_users}")
 print(f"Number of unique products: {num_products}")
 
 
-# In[16]:
+# #### The code identifies and stores the top 10 users who have provided the most ratings in the database, along with the count of their ratings.
+
+# In[67]:
 
 
 # Top 10 users with max ratings given to products
 most_rated_users =database.groupby('user_id').size().sort_values(ascending=False)[:10]
+# print(most_rated_users)
 most_rated_users
 
 
-# ### Pre-Processing
+# ## Pre-Processing
 # 
 
-# In[17]:
+# #### The code creates a new DataFrame, new_database, which contains only the rows from database corresponding to users who have rated 50 or more items. This is useful for analyzing a subset of users with a significant amount of interaction in the dataset.
+# 
+
+# In[68]:
 
 
 counts=database['user_id'].value_counts()
@@ -138,7 +144,7 @@ counts=database['user_id'].value_counts()
 new_database=database[database['user_id'].isin(counts[counts>=50].index)]
 
 
-# In[18]:
+# In[69]:
 
 
 print('The number of observations in the final data =', len(new_database))
@@ -146,16 +152,15 @@ print('Number of unique USERS in the final data = ', new_database['user_id'].nun
 print('Number of unique PRODUCTS in the final data = ', new_database['prod_id'].nunique())
 
 
-# In[19]:
+# In[70]:
 
 
 ### Checking the density of the rating matrix
-
 final_new_database =new_database.pivot(index='user_id', columns='prod_id',values='rating').fillna(0)
 print("Shape of the final_new_database is: ", final_new_database.shape)
 
 
-# In[20]:
+# In[71]:
 
 
 import numpy as np
@@ -163,7 +168,7 @@ num_ratings=np.count_nonzero(final_new_database)
 print("Num of non-zero ratings of the final_new_database: ",num_ratings)
 
 
-# In[21]:
+# In[72]:
 
 
 #Finding the possible number of ratings as per the number of users and products
@@ -171,7 +176,7 @@ possible_num_of_ratings = final_new_database.shape[0] * final_new_database.shape
 print('possible_num_of_ratings = ', possible_num_of_ratings)
 
 
-# In[22]:
+# In[73]:
 
 
 #Density of ratings
@@ -180,28 +185,28 @@ density *= 100
 print ('density: {:4.2f}%'.format(density))
 
 
-# In[23]:
+# In[74]:
 
 
 final_new_database.head()
 
 
-# ### Rank Based Recommendation System
+# ## Rank Based Recommendation System
 # 
 
-# In[24]:
+# In[75]:
 
 
 print(new_database['rating'].dtype)
 
 
-# In[25]:
+# In[76]:
 
 
 print(new_database['rating'].isnull().sum())
 
 
-# In[26]:
+# In[77]:
 
 
 #Calculate the average rating for each product 
@@ -219,7 +224,7 @@ final_rating = final_rating.sort_values(by='avg_rating',ascending=False)
 final_rating.head()
 
 
-# In[27]:
+# In[78]:
 
 
 #defining a function to get the top n products based on highest average rating and minimum interactions
@@ -237,7 +242,7 @@ def top_n_products(final_rating, n, min_interaction):
 # ### Recommending top 5 products with 50 minimum interactions based on popularity
 # 
 
-# In[28]:
+# In[79]:
 
 
 list(top_n_products(final_rating, 5, 50))
@@ -246,7 +251,7 @@ list(top_n_products(final_rating, 5, 50))
 # ### Recommending top 5 products with 100 minimum interactions based on popularity
 # 
 
-# In[29]:
+# In[80]:
 
 
 list(top_n_products(final_rating, 5, 100))
@@ -255,13 +260,13 @@ list(top_n_products(final_rating, 5, 100))
 # # Collaborative Filtering based Recommendation System
 # 
 
-# In[30]:
+# In[81]:
 
 
 final_new_database.head()
 
 
-# In[31]:
+# In[82]:
 
 
 final_new_database['user_index']=np.arange(0, final_new_database.shape[0])
@@ -273,7 +278,7 @@ final_new_database.head()
 # ### Function to find the Similar Users and their similarity scores
 # 
 
-# In[32]:
+# In[83]:
 
 
 # defining a function to get similar users
@@ -298,19 +303,19 @@ def similar_users(user_index, interactions_matrix):
     return most_similar_users, similarity_score
 
 
-# In[33]:
+# In[84]:
 
 
 similar=similar_users(3,final_new_database)[0][0:10]
 
 
-# In[34]:
+# In[85]:
 
 
 similar
 
 
-# In[35]:
+# In[86]:
 
 
 similar_users(3,final_new_database)[1][0:10]
@@ -319,7 +324,7 @@ similar_users(3,final_new_database)[1][0:10]
 # ### Function to recommend products
 # 
 
-# In[36]:
+# In[87]:
 
 
 # defining the recommendations function to get recommendations by using the similar users' preferences
@@ -345,7 +350,7 @@ def recommendations(user_index, num_of_products, interactions_matrix):
 # ### Recommend 5 products to user index 3 based on similarity based collaborative filtering
 # 
 
-# In[37]:
+# In[88]:
 
 
 recommendations(3,5,final_new_database)
@@ -354,7 +359,7 @@ recommendations(3,5,final_new_database)
 # ### Recommend 5 products to user index 1521 based on similarity based collaborative filtering
 # 
 
-# In[38]:
+# In[89]:
 
 
 recommendations(1521,5,final_new_database)
